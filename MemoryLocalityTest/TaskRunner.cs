@@ -33,7 +33,7 @@ namespace MemoryLocalityTest
                     ShouldStop = false;
                     tasks.Clear();
                     TaskCount = 0;
-                    TimeInStateEstimate = default;
+                    TimeInStateEstimate = default(TimeSpan);
                     await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
                     continue;
                 }
