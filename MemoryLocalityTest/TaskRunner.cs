@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MemoryLocalityTest
 {
-    static class TaskRunner
+    internal static class TaskRunner
     {
         private static readonly SortedDictionary<long, List<(long, Task)>> tasks = new SortedDictionary<long, List<(long, Task)>>();
         private static readonly Stopwatch stopwatch = new Stopwatch();
@@ -17,7 +17,7 @@ namespace MemoryLocalityTest
         public static TimeSpan TimeInStateEstimate { get; private set; }
         public static TimeSpan TimeInStatePassed => stopwatch.Elapsed;
 
-        public static async void Run()
+        public static async Task Run()
         {
             stopwatch.Start();
             while (true)
@@ -33,8 +33,8 @@ namespace MemoryLocalityTest
                     ShouldStop = false;
                     tasks.Clear();
                     TaskCount = 0;
-                    TimeInStateEstimate = default;
-                    await Task.Delay(TimeSpan.FromSeconds(1));
+                    TimeInStateEstimate = default(TimeSpan);
+                    await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
                     continue;
                 }
 
@@ -43,7 +43,6 @@ namespace MemoryLocalityTest
                 var enumerator = tasks.GetEnumerator();
                 enumerator.MoveNext();
 
-                var time = enumerator.Current.Key;
                 var taskList = enumerator.Current.Value;
                 var (minTime, task) = taskList[0];
                 if (taskList.Count == 1)
@@ -56,23 +55,25 @@ namespace MemoryLocalityTest
                 }
 
                 TimeInStateEstimate = TimeSpan.FromMilliseconds(minTime);
+
+                stopwatch.Restart();
                 task.Start();
-                await task;
+                await task.ConfigureAwait(false);
                 stopwatch.Restart();
             }
         }
 
-        public static void AddTask(long priority, (long minTime, Task task) task)
+        public static void AddTask(long priority, long minTime, Task task)
         {
             if (tasks.ContainsKey(priority))
             {
-                tasks[priority].Add(task);
+                tasks[priority].Add((minTime, task));
             }
             else
             {
                 tasks.Add(priority, new List<(long, Task)>(1)
                 {
-                    task,
+                    (minTime, task),
                 });
             }
         }
