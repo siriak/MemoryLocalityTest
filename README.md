@@ -1,2 +1,2 @@
-# MemoryLocalityTest
+# MemoryLocalityTest [![Build Status](https://travis-ci.org/siriak/MemoryLocalityTest.svg?branch=master)](https://travis-ci.org/siriak/MemoryLocalityTest) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/78c6b93ea53643e88a0a5518eae7d067)](https://www.codacy.com/app/siriak/MemoryLocalityTest?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=siriak/MemoryLocalityTest&amp;utm_campaign=Badge_Grade)
 The aim of this project is to show how locality of reference (specifically speaking, memory locality) influences program's performance.
