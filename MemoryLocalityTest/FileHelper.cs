@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace MemoryLocalityTest
 {
-    static class FileHelper
+    internal static class FileHelper
     {
         public static int[] LoadFilteredHistoricalData(string fname)
         {

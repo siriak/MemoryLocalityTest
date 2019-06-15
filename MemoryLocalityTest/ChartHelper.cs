@@ -5,7 +5,7 @@ using System.Windows.Forms.DataVisualization.Charting;
 
 namespace MemoryLocalityTest
 {
-    static class ChartHelper
+    internal static class ChartHelper
     {
         public static Series GetSeries(Chart chart, string seriesName)
         {

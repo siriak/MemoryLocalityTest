@@ -2,7 +2,7 @@
 
 namespace MemoryLocalityTest
 {
-    static class MatrixHelper
+    internal static class MatrixHelper
     {
         public static void NaiveMultiplication(int[][] left, int[][] right, int[][] result)
         {

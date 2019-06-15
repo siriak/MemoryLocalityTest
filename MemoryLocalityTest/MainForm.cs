@@ -7,10 +7,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
-using static MemoryLocalityTest.MatrixHelper;
 using static MemoryLocalityTest.ChartHelper;
-using static MemoryLocalityTest.TaskRunner;
 using static MemoryLocalityTest.FileHelper;
+using static MemoryLocalityTest.MatrixHelper;
+using static MemoryLocalityTest.TaskRunner;
 
 namespace MemoryLocalityTest
 {
@@ -18,22 +18,21 @@ namespace MemoryLocalityTest
     {
         public MainForm() => InitializeComponent();
 
-        int START_COUNT;
-        int MAX_COUNT;
-        int TEST_TIMES;
-        double INCREMENT;
-
-        int activeTaskN;
-        string activeTaskLabel;
-        int maxNReached;
+        private int START_COUNT;
+        private int MAX_COUNT;
+        private int TEST_TIMES;
+        private double INCREMENT;
+        private int activeTaskN;
+        private string activeTaskLabel;
+        private int maxNReached;
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            Run();
-            RunGUI();
+            _ = Run();
+            _ = RunGUI();
         }
 
-        async void RunGUI()
+        private async Task RunGUI()
         {
             var timeInStatePassedLine = GetSeries(chart_Main, "Time Passed");
             var timeInStateEstimateLine = GetSeries(chart_Main, "Time Estimate");
@@ -46,7 +45,7 @@ namespace MemoryLocalityTest
 
                 if (Stopped)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
+                    await Task.Delay(TimeSpan.FromMilliseconds(100)).ConfigureAwait(false);
                     continue;
                 }
 
@@ -68,11 +67,11 @@ namespace MemoryLocalityTest
                 timeInStateEstimateLine.Points.AddXY(START_COUNT, TimeInStateEstimate.TotalMilliseconds);
                 timeInStateEstimateLine.Points.AddXY(maxNReached, TimeInStateEstimate.TotalMilliseconds);
 
-                await Task.Delay(TimeSpan.FromSeconds(1));
+                await Task.Delay(TimeSpan.FromMilliseconds(100)).ConfigureAwait(false);
             }
         }
 
-        Task Test(Action<int> toTest, Func<int, int> increment, string label, int n, Series series, bool newPoint)
+        private Task Test(Action<int> toTest, Func<int, int> increment, string label, int n, Series series, bool newPoint)
         {
             return new Task(() =>
             {
@@ -112,7 +111,7 @@ namespace MemoryLocalityTest
                     if (newPoint && newValue <= MAX_COUNT)
                     {
                         var timeEstimate = GetTimeEstimate(minTime, n, newValue);
-                        AddTask(timeEstimate, (timeEstimate, Test(toTest, increment, label, newValue, series, true)));
+                        AddTask(timeEstimate, timeEstimate, Test(toTest, increment, label, newValue, series, true));
                     }
                 }
 
@@ -121,7 +120,7 @@ namespace MemoryLocalityTest
                     var timesLeft = TEST_TIMES - all.Length;
                     if (timesLeft > 0)
                     {
-                        AddTask((all.Length + 1) * minTime, (minTime, Test(toTest, increment, label, n, series, false)));
+                        AddTask((all.Length + 1) * minTime, minTime, Test(toTest, increment, label, n, series, false));
                     }
 
                 }
@@ -178,14 +177,14 @@ namespace MemoryLocalityTest
 
             var tsks = new List<(long, Task)>();
             var series_1 = GetSeries(chart_Main, "Naive");
-            AddTask(0, (0, Test(size => NaiveMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size)), increment, "N", START_COUNT, series_1, true)));
+            AddTask(0, 0, Test(size => NaiveMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size)), increment, "N", START_COUNT, series_1, true));
 
             var series_2 = GetSeries(chart_Main, "Optimized");
-            AddTask(0, (0, Test(size => OptimizedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size)), increment, "O", START_COUNT, series_2, true)));
+            AddTask(0, 0, Test(size => OptimizedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size)), increment, "O", START_COUNT, series_2, true));
 
             var blockSize = bToTest;
             var series_3 = GetSeries(chart_Main, $"Blocked {blockSize}");
-            AddTask(0, (0, Test(size => OptimizedBlockedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size), blockSize), increment, $"B{blockSize}", START_COUNT, series_3, true)));
+            AddTask(0, 0, Test(size => OptimizedBlockedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size), blockSize), increment, $"B{blockSize}", START_COUNT, series_3, true));
 
             if (checkBox_UseReferences.Checked)
             {
@@ -201,7 +200,7 @@ namespace MemoryLocalityTest
                     {
                         used.Add(blockSize);
                         series_3 = GetSeries(chart_Main, $"Blocked {blockSize}");
-                        AddTask(0, (0, Test(size => OptimizedBlockedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size), blockSize), increment, $"B{blockSize}", START_COUNT, series_3, true)));
+                        AddTask(0, 0, Test(size => OptimizedBlockedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size), blockSize), increment, $"B{blockSize}", START_COUNT, series_3, true));
                     }
                 }
             }
