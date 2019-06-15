@@ -33,8 +33,8 @@ namespace MemoryLocalityTest
                 return;
             }
 
-            yValue = (long)Math.Min(yValue, enumerator.Current.YValues[0]);
-            enumerator.Current.YValues = new double[] { yValue };
+            var displayedValue = (long)Math.Min(yValue, enumerator.Current.YValues[0]);
+            enumerator.Current.YValues = new double[] { displayedValue };
 
             SortSeries(chart);
         }));

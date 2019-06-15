@@ -21,6 +21,7 @@ namespace MemoryLocalityTest
         private int START_COUNT;
         private int MAX_COUNT;
         private int TEST_TIMES;
+        private int B_TO_TEST;
         private double INCREMENT;
         private int activeTaskN;
         private string activeTaskLabel;
@@ -141,6 +142,68 @@ namespace MemoryLocalityTest
                 return;
             }
 
+            ReadInput();
+
+            var increment = radioButton_Add.Checked ? (Func<int, int>)AddIncrement : MultiplyIncrement;
+            ClearSeries(chart_Main);
+            maxNReached = 0;
+
+            var series_1 = GetSeries(chart_Main, "Naive");
+            AddTask(0, 0, Test(
+                size => NaiveMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size)),
+                increment,
+                "N",
+                START_COUNT,
+                series_1,
+                true));
+
+            var series_2 = GetSeries(chart_Main, "Optimized");
+            AddTask(0, 0, Test(
+                size => OptimizedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size)),
+                increment,
+                "O",
+                START_COUNT,
+                series_2,
+                true));
+
+            var blockSize = B_TO_TEST;
+            var series_3 = GetSeries(chart_Main, $"Blocked {blockSize}");
+            AddTask(0, 0, Test(
+                size => OptimizedBlockedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size), blockSize),
+                increment,
+                $"B{blockSize}",
+                START_COUNT,
+                series_3,
+                true));
+
+            if (checkBox_UseReferences.Checked)
+            {
+                var used = new HashSet<int>
+                {
+                    blockSize
+                };
+
+                var step = 50;
+                for (blockSize = step; blockSize <= 1000; blockSize += step)
+                {
+                    if (!used.Contains(blockSize))
+                    {
+                        used.Add(blockSize);
+                        series_3 = GetSeries(chart_Main, $"Blocked {blockSize}");
+                        AddTask(0, 0, Test(
+                            size => OptimizedBlockedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size), blockSize),
+                            increment,
+                            $"B{blockSize}",
+                            START_COUNT,
+                            series_3,
+                            true));
+                    }
+                }
+            }
+        }
+
+        private void ReadInput()
+        {
             if (!int.TryParse(textBox_StartMatrixSize.Text, out START_COUNT))
             {
                 textBox_StartMatrixSize.BackColor = Color.Red;
@@ -165,45 +228,11 @@ namespace MemoryLocalityTest
             }
             textBox_NIncrement.BackColor = Color.White;
 
-            if (!int.TryParse(textBox_BlockSizeToTest.Text, out var bToTest))
+            if (!int.TryParse(textBox_BlockSizeToTest.Text, out B_TO_TEST))
             {
                 textBox_NIncrement.BackColor = Color.Red;
             }
             textBox_NIncrement.BackColor = Color.White;
-
-            var increment = radioButton_Add.Checked ? (Func<int, int>)AddIncrement : MultiplyIncrement;
-            ClearSeries(chart_Main);
-            maxNReached = 0;
-
-            var tsks = new List<(long, Task)>();
-            var series_1 = GetSeries(chart_Main, "Naive");
-            AddTask(0, 0, Test(size => NaiveMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size)), increment, "N", START_COUNT, series_1, true));
-
-            var series_2 = GetSeries(chart_Main, "Optimized");
-            AddTask(0, 0, Test(size => OptimizedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size)), increment, "O", START_COUNT, series_2, true));
-
-            var blockSize = bToTest;
-            var series_3 = GetSeries(chart_Main, $"Blocked {blockSize}");
-            AddTask(0, 0, Test(size => OptimizedBlockedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size), blockSize), increment, $"B{blockSize}", START_COUNT, series_3, true));
-
-            if (checkBox_UseReferences.Checked)
-            {
-                var used = new HashSet<int>
-                {
-                    blockSize
-                };
-
-                var step = 50;
-                for (blockSize = step; blockSize <= 1000; blockSize += step)
-                {
-                    if (!used.Contains(blockSize))
-                    {
-                        used.Add(blockSize);
-                        series_3 = GetSeries(chart_Main, $"Blocked {blockSize}");
-                        AddTask(0, 0, Test(size => OptimizedBlockedMultiplication(GetSquareMatrix(size), GetSquareMatrix(size), GetSquareMatrix(size), blockSize), increment, $"B{blockSize}", START_COUNT, series_3, true));
-                    }
-                }
-            }
         }
 
         private string FormatTime(TimeSpan span) => $"{span.Hours}h {span.Minutes}m {span.Seconds}s";
